@@ -1,0 +1,29 @@
+body{margin:0;background:#000;color:#fff;font-family:Courier New,monospace}
+#gameCanvas{display:block;width:100vw;height:100vh}
+#hud{position:fixed;top:10px;left:10px}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000}
+#mobileControls {
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    z-index: 100;
+}
+
+#mobileControls button {
+    width: 80px;
+    height: 80px;
+    font-size: 30px;
+    border: none;
+    border-radius: 50%;
+    background: #222;
+    color: white;
+}
+
+@media (min-width: 900px) {
+    #mobileControls {
+        display: none;
+    }
+}

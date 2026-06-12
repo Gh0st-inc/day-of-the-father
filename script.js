@@ -3,7 +3,6 @@ const ctx = canvas.getContext("2d");
 
 let gameInitialized = false;
 
-// Tamaños responsive según ancho de pantalla
 function getScale() {
     return Math.min(1, canvas.width / 600);
 }
@@ -13,8 +12,7 @@ function getCols() {
 }
 
 function getColSpacing() {
-    const c = getCols();
-    return Math.floor((canvas.width - 40) / c);
+    return Math.floor((canvas.width - 40) / getCols());
 }
 
 function getRowSpacing() {
@@ -44,13 +42,12 @@ const livesElement = document.getElementById("lives");
 livesElement.textContent = lives;
 
 const scoreElement = document.getElementById("score");
-const startBtn = document.getElementById("startBtn");
-const startScreen = document.getElementById("startScreen");
+const startBtn     = document.getElementById("startBtn");
+const startScreen  = document.getElementById("startScreen");
 
 // =====================
 // JUGADOR
 // =====================
-
 const player = {
     width: 40,
     height: 25,
@@ -62,34 +59,31 @@ const player = {
 // =====================
 // CONTROLES
 // =====================
-
-const keys = {};
-const leftBtn = document.getElementById("leftBtn");
+const keys    = {};
+const leftBtn  = document.getElementById("leftBtn");
 const rightBtn = document.getElementById("rightBtn");
-const fireBtn = document.getElementById("fireBtn");
+const fireBtn  = document.getElementById("fireBtn");
 
 if (leftBtn && rightBtn && fireBtn) {
-    leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; }, { passive: false });
-    leftBtn.addEventListener("touchend",   (e) => { e.preventDefault(); keys["ArrowLeft"] = false; }, { passive: false });
-    rightBtn.addEventListener("touchstart",(e) => { e.preventDefault(); keys["ArrowRight"] = true; }, { passive: false });
-    rightBtn.addEventListener("touchend",  (e) => { e.preventDefault(); keys["ArrowRight"] = false; }, { passive: false });
-    fireBtn.addEventListener("touchstart", (e) => { e.preventDefault(); shoot(); }, { passive: false });
+    leftBtn.addEventListener("touchstart",  () => { keys["ArrowLeft"]  = true;  }, { passive: true });
+    leftBtn.addEventListener("touchend",    () => { keys["ArrowLeft"]  = false; }, { passive: true });
+    leftBtn.addEventListener("touchcancel", () => { keys["ArrowLeft"]  = false; }, { passive: true });
+    rightBtn.addEventListener("touchstart", () => { keys["ArrowRight"] = true;  }, { passive: true });
+    rightBtn.addEventListener("touchend",   () => { keys["ArrowRight"] = false; }, { passive: true });
+    rightBtn.addEventListener("touchcancel",() => { keys["ArrowRight"] = false; }, { passive: true });
+    fireBtn.addEventListener("touchstart",  () => { shoot(); },                   { passive: true });
 }
 
 document.addEventListener("keydown", e => {
     keys[e.key] = true;
     if (e.code === "Space") { e.preventDefault(); shoot(); }
 });
-
-document.addEventListener("keyup", e => {
-    keys[e.key] = false;
-});
+document.addEventListener("keyup", e => { keys[e.key] = false; });
 
 // =====================
 // DISPAROS
 // =====================
-
-let bullets = [];
+let bullets      = [];
 let enemyBullets = [];
 
 function shoot() {
@@ -107,9 +101,9 @@ function enemyShoot() {
     const aliveInvaders = invaders.filter(i => i.alive);
     if (aliveInvaders.length === 0) return;
     const shooter = aliveInvaders[Math.floor(Math.random() * aliveInvaders.length)];
-    const colSpacing = getColSpacing();
+    const cs = getColSpacing();
     enemyBullets.push({
-        x: formationX + shooter.col * colSpacing + colSpacing * 0.3,
+        x: formationX + shooter.col * cs + cs * 0.3,
         y: formationY + shooter.row * getRowSpacing() + 20,
         width: 4,
         height: 15
@@ -119,13 +113,13 @@ function enemyShoot() {
 // =====================
 // INVASORES
 // =====================
-
 const rows = 5;
 let cols = 11;
 
-let formationX = 20;
-let formationY = 40;
-let direction = 1;
+let formationX  = 20;
+let formationY  = 40;
+let direction   = 1;
+let edgeCooldown = 0;   // ← evita que baje múltiples veces por frame
 
 let invaders = [];
 
@@ -144,7 +138,6 @@ createInvaders();
 // =====================
 // ESCUDOS
 // =====================
-
 let shields = [];
 
 function createShields() {
@@ -153,12 +146,8 @@ function createShields() {
     const shieldSize = canvas.width < 400 ? 8 : 10;
     const shieldCols = canvas.width < 400 ? 6 : 8;
 
-    const positions = [];
     for (let i = 0; i < numShields; i++) {
-        positions.push(canvas.width * (i + 0.5) / numShields - (shieldCols * shieldSize) / 2);
-    }
-
-    positions.forEach(startX => {
+        const startX = canvas.width * (i + 0.5) / numShields - (shieldCols * shieldSize) / 2;
         for (let y = 0; y < 4; y++) {
             for (let x = 0; x < shieldCols; x++) {
                 shields.push({
@@ -170,32 +159,29 @@ function createShields() {
                 });
             }
         }
-    });
+    }
 }
 
 createShields();
 gameInitialized = true;
 
-setInterval(() => {
-    if (gameRunning) { enemyShoot(); }
-}, 1200);
+setInterval(() => { if (gameRunning) { enemyShoot(); } }, 1200);
 
 // =====================
 // INICIO
 // =====================
-
 startBtn.addEventListener("click", () => {
     score = 0;
     lives = 3;
     scoreElement.textContent = score;
     livesElement.textContent = lives;
 
-    bullets = [];
+    bullets      = [];
     enemyBullets = [];
-
-    formationX = 20;
-    formationY = 40;
-    direction = 1;
+    formationX   = 20;
+    formationY   = 40;
+    direction    = 1;
+    edgeCooldown = 0;
 
     createInvaders();
     createShields();
@@ -210,13 +196,11 @@ startBtn.addEventListener("click", () => {
 // =====================
 // UPDATE
 // =====================
-
 function update() {
     player.y = canvas.height - 80;
 
     if (keys["ArrowLeft"])  { player.x -= player.speed; }
     if (keys["ArrowRight"]) { player.x += player.speed; }
-
     player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
     bullets.forEach(b => { b.y -= 10; });
@@ -225,45 +209,51 @@ function update() {
     enemyBullets.forEach(b => { b.y += 4; });
     enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 20);
 
-    // Movimiento invasores
-    const colSpacing = getColSpacing();
-    const rowSpacing = getRowSpacing();
-
-    let speed = 1;
+    // Velocidad según invasores restantes
     const aliveCount = invaders.filter(i => i.alive).length;
     const total = rows * cols;
-    if (aliveCount < total * 0.7) speed = 1.5;
-    if (aliveCount < total * 0.4) speed = 2;
+    let speed = 1;
+    if (aliveCount < total * 0.7)  speed = 1.5;
+    if (aliveCount < total * 0.4)  speed = 2;
     if (aliveCount < total * 0.15) speed = 3;
 
     formationX += direction * speed;
 
-    let hitEdge = false;
-    invaders.forEach(invader => {
-        if (!invader.alive) return;
-        const x = formationX + invader.col * colSpacing;
-        if (x + colSpacing > canvas.width - 10 || x < 10) { hitEdge = true; }
-    });
-
-    if (hitEdge) {
-        direction *= -1;
-        formationY += 15;
+    // Chequeo de borde con cooldown para que solo baje UNA vez
+    if (edgeCooldown > 0) {
+        edgeCooldown--;
+    } else {
+        let hitEdge = false;
+        const cs = getColSpacing();
+        invaders.forEach(invader => {
+            if (!invader.alive) return;
+            const x = formationX + invader.col * cs;
+            if (x + cs > canvas.width - 10 || x < 10) { hitEdge = true; }
+        });
+        if (hitEdge) {
+            direction    *= -1;
+            formationY   += 15;
+            edgeCooldown  = 30;   // ~0.5 seg a 60fps antes de volver a chequear
+        }
     }
+
+    const cs = getColSpacing();
+    const rs = getRowSpacing();
 
     // Bala vs invasor
     bullets.forEach(bullet => {
         invaders.forEach(invader => {
             if (!invader.alive) return;
-            const x = formationX + invader.col * colSpacing;
-            const y = formationY + invader.row * rowSpacing;
+            const x = formationX + invader.col * cs;
+            const y = formationY + invader.row * rs;
             if (
-                bullet.x < x + colSpacing - 5 &&
+                bullet.x < x + cs - 5 &&
                 bullet.x + bullet.width > x + 5 &&
-                bullet.y < y + rowSpacing - 5 &&
+                bullet.y < y + rs - 5 &&
                 bullet.y + bullet.height > y
             ) {
                 invader.alive = false;
-                bullet.dead = true;
+                bullet.dead   = true;
                 score += 10;
                 scoreElement.textContent = score;
             }
@@ -279,10 +269,7 @@ function update() {
                 bullet.x + bullet.width > block.x &&
                 bullet.y < block.y + block.height &&
                 bullet.y + bullet.height > block.y
-            ) {
-                block.alive = false;
-                bullet.dead = true;
-            }
+            ) { block.alive = false; bullet.dead = true; }
         });
     });
 
@@ -315,18 +302,14 @@ function update() {
                 bullet.x + bullet.width > block.x &&
                 bullet.y < block.y + block.height &&
                 bullet.y + bullet.height > block.y
-            ) {
-                block.alive = false;
-                bullet.dead = true;
-            }
+            ) { block.alive = false; bullet.dead = true; }
         });
     });
 
     enemyBullets = enemyBullets.filter(b => !b.dead);
 
     // Victoria
-    const remaining = invaders.filter(i => i.alive).length;
-    if (remaining === 0) {
+    if (invaders.filter(i => i.alive).length === 0) {
         gameRunning = false;
         setTimeout(() => alert(
             "🎉 ¡Feliz Día del Padre! 🎉\n\n" +
@@ -340,10 +323,9 @@ function update() {
 // =====================
 // DIBUJADO
 // =====================
-
 function drawPlayer() {
     const size = Math.max(28, Math.floor(40 * getScale()));
-    ctx.font = size + "px Arial";
+    ctx.font      = size + "px Arial";
     ctx.textAlign = "left";
     ctx.fillText("🏆", player.x, player.y + size);
 }
@@ -359,26 +341,26 @@ function drawEnemyBullets() {
 }
 
 function drawInvaders() {
-    const colSpacing = getColSpacing();
-    const rowSpacing = getRowSpacing();
-    const emojiSize = getEmojiSize();
+    const cs   = getColSpacing();
+    const rs   = getRowSpacing();
+    const size = getEmojiSize();
     ctx.textAlign = "center";
     invaders.forEach(invader => {
         if (!invader.alive) return;
-        const x = formationX + invader.col * colSpacing;
-        const y = formationY + invader.row * rowSpacing;
+        const x = formationX + invader.col * cs;
+        const y = formationY + invader.row * rs;
         let emoji = "📋";
         if (invader.row <= 1)      { emoji = "😴"; }
         else if (invader.row <= 3) { emoji = "💸"; }
-        ctx.font = emojiSize + "px Arial";
-        ctx.fillText(emoji, x + colSpacing / 2, y + emojiSize);
+        ctx.font = size + "px Arial";
+        ctx.fillText(emoji, x + cs / 2, y + size);
     });
 }
 
 function drawShields() {
     shields.forEach(block => {
         if (!block.alive) return;
-        ctx.fillStyle = "#00aa00";
+        ctx.fillStyle = "#00cc44";
         ctx.fillRect(block.x, block.y, block.width, block.height);
     });
 }
@@ -395,12 +377,8 @@ function draw() {
 // =====================
 // LOOP
 // =====================
-
 function loop() {
-    if (gameRunning) {
-        update();
-        draw();
-    }
+    if (gameRunning) { update(); draw(); }
     requestAnimationFrame(loop);
 }
 

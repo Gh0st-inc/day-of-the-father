@@ -430,6 +430,7 @@ enemyBullets = enemyBullets.filter(
     );
 
 }
+    /*
     const lowestInvader = Math.max(
     ...invaders
         .filter(i => i.alive)
@@ -443,7 +444,7 @@ if (lowestInvader > player.y + 50) {
     alert("💥 Los invasores invadieron la Tierra");
 
 }
-
+*/
 }
 
 // =====================

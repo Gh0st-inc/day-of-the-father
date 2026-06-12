@@ -610,23 +610,5 @@ function loop() {
     requestAnimationFrame(loop);
 
 }
-leftBtn.addEventListener("touchstart", () => {
-    keys["ArrowLeft"] = true;
-});
 
-leftBtn.addEventListener("touchend", () => {
-    keys["ArrowLeft"] = false;
-});
-
-rightBtn.addEventListener("touchstart", () => {
-    keys["ArrowRight"] = true;
-});
-
-rightBtn.addEventListener("touchend", () => {
-    keys["ArrowRight"] = false;
-});
-
-fireBtn.addEventListener("touchstart", () => {
-    shoot();
-});
 loop();

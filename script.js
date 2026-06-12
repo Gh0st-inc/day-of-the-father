@@ -3,6 +3,28 @@ const ctx = canvas.getContext("2d");
 
 let gameInitialized = false;
 
+// Tamaños responsive según ancho de pantalla
+function getScale() {
+    return Math.min(1, canvas.width / 600);
+}
+
+function getCols() {
+    return canvas.width < 500 ? 7 : 11;
+}
+
+function getColSpacing() {
+    const c = getCols();
+    return Math.floor((canvas.width - 40) / c);
+}
+
+function getRowSpacing() {
+    return Math.floor(getColSpacing() * 0.75);
+}
+
+function getEmojiSize() {
+    return Math.max(18, Math.floor(getColSpacing() * 0.55));
+}
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -30,11 +52,11 @@ const startScreen = document.getElementById("startScreen");
 // =====================
 
 const player = {
-    width: 50,
+    width: 40,
     height: 25,
     x: 0,
     y: 0,
-    speed: 7
+    speed: 6
 };
 
 // =====================
@@ -47,16 +69,16 @@ const rightBtn = document.getElementById("rightBtn");
 const fireBtn = document.getElementById("fireBtn");
 
 if (leftBtn && rightBtn && fireBtn) {
-    leftBtn.addEventListener("touchstart", () => { keys["ArrowLeft"] = true; });
-    leftBtn.addEventListener("touchend",   () => { keys["ArrowLeft"] = false; });
-    rightBtn.addEventListener("touchstart",() => { keys["ArrowRight"] = true; });
-    rightBtn.addEventListener("touchend",  () => { keys["ArrowRight"] = false; });
-    fireBtn.addEventListener("touchstart", () => { shoot(); });
+    leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; }, { passive: false });
+    leftBtn.addEventListener("touchend",   (e) => { e.preventDefault(); keys["ArrowLeft"] = false; }, { passive: false });
+    rightBtn.addEventListener("touchstart",(e) => { e.preventDefault(); keys["ArrowRight"] = true; }, { passive: false });
+    rightBtn.addEventListener("touchend",  (e) => { e.preventDefault(); keys["ArrowRight"] = false; }, { passive: false });
+    fireBtn.addEventListener("touchstart", (e) => { e.preventDefault(); shoot(); }, { passive: false });
 }
 
 document.addEventListener("keydown", e => {
     keys[e.key] = true;
-    if (e.code === "Space") { shoot(); }
+    if (e.code === "Space") { e.preventDefault(); shoot(); }
 });
 
 document.addEventListener("keyup", e => {
@@ -85,9 +107,10 @@ function enemyShoot() {
     const aliveInvaders = invaders.filter(i => i.alive);
     if (aliveInvaders.length === 0) return;
     const shooter = aliveInvaders[Math.floor(Math.random() * aliveInvaders.length)];
+    const colSpacing = getColSpacing();
     enemyBullets.push({
-        x: formationX + shooter.col * 50 + 15,
-        y: formationY + shooter.row * 40 + 20,
+        x: formationX + shooter.col * colSpacing + colSpacing * 0.3,
+        y: formationY + shooter.row * getRowSpacing() + 20,
         width: 4,
         height: 15
     });
@@ -98,7 +121,7 @@ function enemyShoot() {
 // =====================
 
 const rows = 5;
-const cols = 11;
+let cols = 11;
 
 let formationX = 20;
 let formationY = 40;
@@ -107,6 +130,7 @@ let direction = 1;
 let invaders = [];
 
 function createInvaders() {
+    cols = getCols();
     invaders = [];
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
@@ -125,20 +149,23 @@ let shields = [];
 
 function createShields() {
     shields = [];
-    const positions = [
-        canvas.width * 0.15,
-        canvas.width * 0.35,
-        canvas.width * 0.55,
-        canvas.width * 0.75
-    ];
+    const numShields = canvas.width < 400 ? 3 : 4;
+    const shieldSize = canvas.width < 400 ? 8 : 10;
+    const shieldCols = canvas.width < 400 ? 6 : 8;
+
+    const positions = [];
+    for (let i = 0; i < numShields; i++) {
+        positions.push(canvas.width * (i + 0.5) / numShields - (shieldCols * shieldSize) / 2);
+    }
+
     positions.forEach(startX => {
-        for (let y = 0; y < 5; y++) {
-            for (let x = 0; x < 8; x++) {
+        for (let y = 0; y < 4; y++) {
+            for (let x = 0; x < shieldCols; x++) {
                 shields.push({
-                    x: startX + x * 10,
-                    y: canvas.height - 250 + y * 10,
-                    width: 10,
-                    height: 10,
+                    x: startX + x * shieldSize,
+                    y: canvas.height - 200 + y * shieldSize,
+                    width: shieldSize,
+                    height: shieldSize,
                     alive: true
                 });
             }
@@ -158,7 +185,6 @@ setInterval(() => {
 // =====================
 
 startBtn.addEventListener("click", () => {
-    // Reiniciar estado del juego
     score = 0;
     lives = 3;
     scoreElement.textContent = score;
@@ -174,7 +200,6 @@ startBtn.addEventListener("click", () => {
     createInvaders();
     createShields();
 
-    // Posicionar jugador según tamaño actual del canvas
     player.x = canvas.width / 2 - player.width / 2;
     player.y = canvas.height - 80;
 
@@ -187,7 +212,6 @@ startBtn.addEventListener("click", () => {
 // =====================
 
 function update() {
-
     player.y = canvas.height - 80;
 
     if (keys["ArrowLeft"])  { player.x -= player.speed; }
@@ -202,36 +226,40 @@ function update() {
     enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 20);
 
     // Movimiento invasores
+    const colSpacing = getColSpacing();
+    const rowSpacing = getRowSpacing();
+
     let speed = 1;
     const aliveCount = invaders.filter(i => i.alive).length;
-    if (aliveCount < 40) speed = 1.5;
-    if (aliveCount < 25) speed = 2;
-    if (aliveCount < 10) speed = 3;
+    const total = rows * cols;
+    if (aliveCount < total * 0.7) speed = 1.5;
+    if (aliveCount < total * 0.4) speed = 2;
+    if (aliveCount < total * 0.15) speed = 3;
 
     formationX += direction * speed;
 
     let hitEdge = false;
     invaders.forEach(invader => {
         if (!invader.alive) return;
-        const x = formationX + invader.col * 50;
-        if (x > canvas.width - 60 || x < 10) { hitEdge = true; }
+        const x = formationX + invader.col * colSpacing;
+        if (x + colSpacing > canvas.width - 10 || x < 10) { hitEdge = true; }
     });
 
     if (hitEdge) {
         direction *= -1;
-        formationY += 20;
+        formationY += 15;
     }
 
     // Bala vs invasor
     bullets.forEach(bullet => {
         invaders.forEach(invader => {
             if (!invader.alive) return;
-            const x = formationX + invader.col * 50;
-            const y = formationY + invader.row * 40;
+            const x = formationX + invader.col * colSpacing;
+            const y = formationY + invader.row * rowSpacing;
             if (
-                bullet.x < x + 30 &&
-                bullet.x + bullet.width > x &&
-                bullet.y < y + 20 &&
+                bullet.x < x + colSpacing - 5 &&
+                bullet.x + bullet.width > x + 5 &&
+                bullet.y < y + rowSpacing - 5 &&
                 bullet.y + bullet.height > y
             ) {
                 invader.alive = false;
@@ -314,9 +342,10 @@ function update() {
 // =====================
 
 function drawPlayer() {
-    ctx.font = "42px Arial";
+    const size = Math.max(28, Math.floor(40 * getScale()));
+    ctx.font = size + "px Arial";
     ctx.textAlign = "left";
-    ctx.fillText("🏆", player.x, player.y + 35);
+    ctx.fillText("🏆", player.x, player.y + size);
 }
 
 function drawBullets() {
@@ -330,24 +359,27 @@ function drawEnemyBullets() {
 }
 
 function drawInvaders() {
+    const colSpacing = getColSpacing();
+    const rowSpacing = getRowSpacing();
+    const emojiSize = getEmojiSize();
     ctx.textAlign = "center";
     invaders.forEach(invader => {
         if (!invader.alive) return;
-        const x = formationX + invader.col * 50;
-        const y = formationY + invader.row * 40;
+        const x = formationX + invader.col * colSpacing;
+        const y = formationY + invader.row * rowSpacing;
         let emoji = "📋";
         if (invader.row <= 1)      { emoji = "😴"; }
         else if (invader.row <= 3) { emoji = "💸"; }
-        ctx.font = "28px Arial";
-        ctx.fillText(emoji, x + 15, y + 25);
+        ctx.font = emojiSize + "px Arial";
+        ctx.fillText(emoji, x + colSpacing / 2, y + emojiSize);
     });
 }
 
 function drawShields() {
-    ctx.font = "12px Arial";
     shields.forEach(block => {
         if (!block.alive) return;
-        ctx.fillText("🧱", block.x, block.y + 10);
+        ctx.fillStyle = "#00aa00";
+        ctx.fillRect(block.x, block.y, block.width, block.height);
     });
 }
 

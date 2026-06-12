@@ -618,3 +618,4 @@ function loop() {
 }
 
 loop();
+console.log("SCRIPT CARGADO");

@@ -5,7 +5,6 @@ function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    player.y = canvas.height - 80;
 
     createShields();
 }

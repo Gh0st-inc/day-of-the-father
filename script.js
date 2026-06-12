@@ -4,8 +4,11 @@ const ctx = canvas.getContext("2d");
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-}
 
+    player.y = canvas.height - 80;
+
+    createShields();
+}
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
@@ -147,8 +150,8 @@ function enemyShoot() {
 const rows = 5;
 const cols = 11;
 
-let formationX = 100;
-let formationY = 80;
+let formationX = 20;
+let formationY = 40;
 let direction = 1;
 
 let invaders = [];

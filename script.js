@@ -57,7 +57,7 @@ const player = {
 };
 
 // =====================
-// CONTROLES
+// CONTROLES — pointerdown/pointerup para Android
 // =====================
 const keys    = {};
 const leftBtn  = document.getElementById("leftBtn");
@@ -65,13 +65,15 @@ const rightBtn = document.getElementById("rightBtn");
 const fireBtn  = document.getElementById("fireBtn");
 
 if (leftBtn && rightBtn && fireBtn) {
-    leftBtn.addEventListener("touchstart",  () => { keys["ArrowLeft"]  = true;  }, { passive: true });
-    leftBtn.addEventListener("touchend",    () => { keys["ArrowLeft"]  = false; }, { passive: true });
-    leftBtn.addEventListener("touchcancel", () => { keys["ArrowLeft"]  = false; }, { passive: true });
-    rightBtn.addEventListener("touchstart", () => { keys["ArrowRight"] = true;  }, { passive: true });
-    rightBtn.addEventListener("touchend",   () => { keys["ArrowRight"] = false; }, { passive: true });
-    rightBtn.addEventListener("touchcancel",() => { keys["ArrowRight"] = false; }, { passive: true });
-    fireBtn.addEventListener("touchstart",  () => { shoot(); },                   { passive: true });
+    leftBtn.addEventListener("pointerdown",  () => { keys["ArrowLeft"]  = true;  });
+    leftBtn.addEventListener("pointerup",    () => { keys["ArrowLeft"]  = false; });
+    leftBtn.addEventListener("pointerleave", () => { keys["ArrowLeft"]  = false; });
+
+    rightBtn.addEventListener("pointerdown",  () => { keys["ArrowRight"] = true;  });
+    rightBtn.addEventListener("pointerup",    () => { keys["ArrowRight"] = false; });
+    rightBtn.addEventListener("pointerleave", () => { keys["ArrowRight"] = false; });
+
+    fireBtn.addEventListener("pointerdown", () => { shoot(); });
 }
 
 document.addEventListener("keydown", e => {
@@ -116,10 +118,10 @@ function enemyShoot() {
 const rows = 5;
 let cols = 11;
 
-let formationX  = 20;
-let formationY  = 40;
-let direction   = 1;
-let edgeCooldown = 0;   // ← evita que baje múltiples veces por frame
+let formationX   = 20;
+let formationY   = 40;
+let direction    = 1;
+let lastDropTime = 0;   // timestamp del último bajada
 
 let invaders = [];
 
@@ -181,7 +183,7 @@ startBtn.addEventListener("click", () => {
     formationX   = 20;
     formationY   = 40;
     direction    = 1;
-    edgeCooldown = 0;
+    lastDropTime = 0;
 
     createInvaders();
     createShields();
@@ -196,7 +198,7 @@ startBtn.addEventListener("click", () => {
 // =====================
 // UPDATE
 // =====================
-function update() {
+function update(timestamp) {
     player.y = canvas.height - 80;
 
     if (keys["ArrowLeft"])  { player.x -= player.speed; }
@@ -219,25 +221,21 @@ function update() {
 
     formationX += direction * speed;
 
-    // Chequeo de borde con cooldown para que solo baje UNA vez
-    if (edgeCooldown > 0) {
-        edgeCooldown--;
-    } else {
-        let hitEdge = false;
-        const cs = getColSpacing();
-        invaders.forEach(invader => {
-            if (!invader.alive) return;
-            const x = formationX + invader.col * cs;
-            if (x + cs > canvas.width - 10 || x < 10) { hitEdge = true; }
-        });
-        if (hitEdge) {
-            direction    *= -1;
-            formationY   += 15;
-            edgeCooldown  = 30;   // ~0.5 seg a 60fps antes de volver a chequear
-        }
+    // Borde: solo baja si pasaron al menos 600ms desde la última bajada
+    const cs = getColSpacing();
+    let hitEdge = false;
+    invaders.forEach(invader => {
+        if (!invader.alive) return;
+        const x = formationX + invader.col * cs;
+        if (x + cs > canvas.width - 10 || x < 10) { hitEdge = true; }
+    });
+
+    if (hitEdge && timestamp - lastDropTime > 600) {
+        direction    *= -1;
+        formationY   += 15;
+        lastDropTime  = timestamp;
     }
 
-    const cs = getColSpacing();
     const rs = getRowSpacing();
 
     // Bala vs invasor
@@ -375,12 +373,12 @@ function draw() {
 }
 
 // =====================
-// LOOP
+// LOOP — recibe timestamp de requestAnimationFrame
 // =====================
-function loop() {
-    if (gameRunning) { update(); draw(); }
+function loop(timestamp) {
+    if (gameRunning) { update(timestamp); draw(); }
     requestAnimationFrame(loop);
 }
 
-loop();
+requestAnimationFrame(loop);
 console.log("SCRIPT CARGADO");

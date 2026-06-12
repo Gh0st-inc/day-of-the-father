@@ -436,7 +436,7 @@ enemyBullets = enemyBullets.filter(
         .map(i => formationY + i.row * 40)
 );
 
-if (lowestInvader > player.y - 40) {
+if (lowestInvader > player.y + 50) {
 
     gameRunning = false;
 

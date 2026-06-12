@@ -46,26 +46,29 @@ const leftBtn = document.getElementById("leftBtn");
 const rightBtn = document.getElementById("rightBtn");
 const fireBtn = document.getElementById("fireBtn");
 
-leftBtn.addEventListener("touchstart", () => {
-    keys["ArrowLeft"] = true;
-});
+if (leftBtn && rightBtn && fireBtn) {
 
-leftBtn.addEventListener("touchend", () => {
-    keys["ArrowLeft"] = false;
-});
+    leftBtn.addEventListener("touchstart", () => {
+        keys["ArrowLeft"] = true;
+    });
 
-rightBtn.addEventListener("touchstart", () => {
-    keys["ArrowRight"] = true;
-});
+    leftBtn.addEventListener("touchend", () => {
+        keys["ArrowLeft"] = false;
+    });
 
-rightBtn.addEventListener("touchend", () => {
-    keys["ArrowRight"] = false;
-});
+    rightBtn.addEventListener("touchstart", () => {
+        keys["ArrowRight"] = true;
+    });
 
-fireBtn.addEventListener("touchstart", () => {
-    shoot();
-});
+    rightBtn.addEventListener("touchend", () => {
+        keys["ArrowRight"] = false;
+    });
 
+    fireBtn.addEventListener("touchstart", () => {
+        shoot();
+    });
+
+}
 document.addEventListener("keydown", e => {
 
     keys[e.key] = true;

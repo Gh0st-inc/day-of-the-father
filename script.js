@@ -4,9 +4,10 @@ const ctx = canvas.getContext("2d");
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+       
+    if (typeof shields !== "undefined") {
+        createShields();
 
-
-    createShields();
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -201,7 +202,7 @@ function createShields() {
 
                 shields.push({
                     x: startX + x * 10,
-                    y: canvas.height - 180 + y * 10,
+                    y: canvas.height - 250 + y * 10,
                     width: 10,
                     height: 10,
                     alive: true
@@ -216,6 +217,7 @@ function createShields() {
 }
 
 createShields();
+
 setInterval(() => {
 
     if(gameRunning){

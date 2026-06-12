@@ -4,11 +4,12 @@ const ctx = canvas.getContext("2d");
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-       
+
     if (typeof shields !== "undefined") {
         createShields();
-
+    }
 }
+
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 

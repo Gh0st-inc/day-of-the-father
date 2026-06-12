@@ -1,10 +1,12 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+let gameInitialized = false;
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    if (typeof shields !== "undefined") {
+    if (gameInitialized) {
         createShields();
     }
 }
@@ -145,6 +147,7 @@ function createShields() {
 }
 
 createShields();
+gameInitialized = true;
 
 setInterval(() => {
     if (gameRunning) { enemyShoot(); }

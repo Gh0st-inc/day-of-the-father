@@ -13,7 +13,7 @@ function getRowSpacing() {
     return Math.floor(getColSpacing() * 0.75);
 }
 function getEmojiSize() {
-    return Math.max(18, Math.floor(getColSpacing() * 0.55));
+    return Math.max(16, Math.floor(getColSpacing() * 0.45));
 }
 
 function resizeCanvas() {

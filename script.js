@@ -114,7 +114,7 @@ function enemyShoot() {
 // =====================
 const rows = 5;
 let cols = 11;
-let formationX = 20, formationY = 40, direction = 1, lastDropTime = 0;
+let formationX = 20, formationY = 40, direction = 1, lastDropTime = -9999;
 let invaders = [];
 
 function createInvaders() {
@@ -156,7 +156,7 @@ startBtn.addEventListener("click", () => {
     scoreElement.textContent = score;
     livesElement.textContent = lives;
     bullets = []; enemyBullets = [];
-    formationX = 20; formationY = 40; direction = 1; lastDropTime = 0;
+    formationX = 20; formationY = 40; direction = 1; lastDropTime = -9999;
     createInvaders();
     createShields();
     player.x = canvas.width / 2 - player.width / 2;
@@ -191,7 +191,7 @@ function update(ts) {
         const x = formationX + inv.col * cs;
         if (x + cs > canvas.width - 10 || x < 10) hit = true;
     });
-    if (hit && ts - lastDropTime > 600) {
+    if (hit && ts - lastDropTime > 1200) {
         direction *= -1;
         formationY += 15;
         lastDropTime = ts;
